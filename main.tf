@@ -44,10 +44,10 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 ##################### adding an ingress controller with helm #####################
 provider "helm" {
   kubernetes {
-    host = azurerm_kubernetes_cluster.cluster.kube_config.0.host
-    client_certificate = azurerm_kubernetes_cluster.cluster.kube_config.0.client_certificate
-    client_key = azurerm_kubernetes_cluster.cluster.kube_config.0.client_key
-    cluster_ca_certificate = azurerm_kubernetes_cluster.cluster.kube_config.0.cluster_ca_certificate
+    host                    = azurerm_kubernetes_cluster.cluster.kube_config.0.host
+    client_certificate      = base64decode(azurerm_kubernetes_cluster.cluster.kube_config.0.client_certificate)
+    client_key              = base64decode(azurerm_kubernetes_cluster.cluster.kube_config.0.client_key)
+    cluster_ca_certificate  = base64decode(azurerm_kubernetes_cluster.cluster.kube_config.0.cluster_ca_certificate)
   }
 }
 
@@ -65,13 +65,12 @@ resource "azurerm_public_ip" "nginx_ingress" {
 # install nginx ingress controller using helm chart
 resource "helm_release" "nginx_ingress" {
   name       = "nginx-ingress"
-  repository = "https://kubernetes-charts.storage.googleapis.com"
+  repository = "https://helm.nginx.com/stable"
   chart      = "nginx-ingress"
 
-  set {
-    name  = "rbac.create"
-    value = "false"
-  }
+  depends_on = [
+    azurerm_kubernetes_cluster.cluster
+  ]
 
   set {
     name  = "controller.replicaCount"
