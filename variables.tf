@@ -7,7 +7,13 @@ variable resource_location {
 variable cluster_name {
 }
 
-variable default_node_count {
+variable initial_node_count {
+}
+
+variable min_node_count {
+}
+
+variable max_node_count {
 }
 
 variable vm_type {

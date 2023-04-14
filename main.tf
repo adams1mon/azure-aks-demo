@@ -26,14 +26,11 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 
   default_node_pool {
     name       = "default"
-    node_count = var.default_node_count
     vm_size    = var.vm_type
-
-    # TODO: configure auto-scaling
-  }
-
-  auto_scaler_profile {
-    
+    enable_auto_scaling = true
+    node_count = var.initial_node_count
+    min_count = var.min_node_count
+    max_count = var.max_node_count
   }
 
   identity {
@@ -68,6 +65,11 @@ resource "helm_release" "nginx_ingress" {
   repository = "https://helm.nginx.com/stable"
   chart      = "nginx-ingress"
 
+  # says that endpoint is not configured
+  # name       = "ingress-nginx"
+  # repository = "https://kubernetes.github.io/ingress-nginx/"
+  # chart      = "ingress-nginx"
+  
   depends_on = [
     azurerm_kubernetes_cluster.cluster
   ]
@@ -77,17 +79,21 @@ resource "helm_release" "nginx_ingress" {
     value = var.ingress_replicas
   }
 
-  # TODO: test if source IP preservation works
-
-  # set {
-  #   name  = "controller.service.externalTrafficPolicy"
-  #   value = "Local"
-  # }
-
   set {
     name  = "controller.service.loadBalancerIP"
     value = azurerm_public_ip.nginx_ingress.ip_address
   }
+
+  # these don't work :(
+  # set {
+  #   name = "namespace"
+  #   value = "ingress-nginx"
+  # }
+
+  # set {
+  #   name = "create-namespace"
+  #   value = ""
+  # }
 }
 
 # TODO: create separate kubernetes namespace for the ingress controller pods
