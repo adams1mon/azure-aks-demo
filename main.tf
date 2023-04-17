@@ -48,9 +48,8 @@ provider "helm" {
   }
 }
 
-# add the nginx ingress controller
-# create static public ip address to be used by nginx ingress
-resource "azurerm_public_ip" "nginx_ingress" {
+# create static public ip address to be used by the ingress
+resource "azurerm_public_ip" "ingress_ip" {
   name                         = "nginx-ingress-public-ip"
   location                     = azurerm_kubernetes_cluster.cluster.location
   resource_group_name          = azurerm_kubernetes_cluster.cluster.node_resource_group
@@ -59,6 +58,7 @@ resource "azurerm_public_ip" "nginx_ingress" {
   sku                          = "Standard" # must be a standard tier for ingress controllers
 }
 
+# add an ingress controller
 # install nginx ingress controller using helm chart
 resource "helm_release" "nginx_ingress" {
   name       = "nginx-ingress"
@@ -81,7 +81,7 @@ resource "helm_release" "nginx_ingress" {
 
   set {
     name  = "controller.service.loadBalancerIP"
-    value = azurerm_public_ip.nginx_ingress.ip_address
+    value = azurerm_public_ip.ingress_ip.ip_address
   }
 
   # these don't work :(
