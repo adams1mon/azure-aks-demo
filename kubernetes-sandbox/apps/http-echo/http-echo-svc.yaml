@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: http-echo
+  name: http-echo
+  namespace: apps
+spec:
+  ports:
+  - name: http-echo
+    port: 80
+    protocol: TCP
+    targetPort: 5678
+  selector:
+    app: http-echo
+  type: ClusterIP

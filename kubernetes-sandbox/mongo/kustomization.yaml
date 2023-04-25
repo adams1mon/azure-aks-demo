@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- storageclass.yaml
+- mongo-namespace.yaml
+- podreader-role.yaml
+- podreader-rolebinding.yaml
+- mongo-secret-keyfile.yaml
+- mongodb-statefulset.yaml
+
+- mongo-express.yaml

@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo-statefulset
+  namespace: mongo
+spec:
+  selector:
+    matchLabels:
+      name: mongodb
+      env: test
+  serviceName: "mongo-service"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        name: mongodb
+        env: test
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: mongo
+        image: mongo:5.0
+        command: ["/bin/sh","-c"]
+        args: ["cp /secret /usr/local/bin/secret && chown 999:999 /usr/local/bin/secret && /usr/local/bin/docker-entrypoint.sh --replSet MainRepSet --bind_ip 0.0.0.0 --keyFile /usr/local/bin/secret"]
+        ports:
+          - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: mongouser
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: mongouser
+        - name: MONGO_INITDB_DATABASE
+          value: admin
+
+        # resources:
+        #  limits:
+        #    cpu: 250m
+        #    memory: 100M
+        #  requests:
+        #    cpu: 200m
+       
+        volumeMounts:
+          - name: mongo-persistent-storage
+            mountPath: /data/db
+          - mountPath: /secret
+            name: secretkeyvolume
+            subPath: secretkey
+
+      - name: mongo-sidecar
+        image: cvallance/mongo-k8s-sidecar
+        env:
+          - name: MONGO_SIDECAR_POD_LABELS
+            value: "name=mongodb,env=test"
+          - name: MONGODB_USERNAME # Should be imported using a configmap
+            value: mongouser
+          - name: MONGODB_PASSWORD # Should be imported using a secret
+            value: mongouser
+          - name: MONGODB_DATABASE
+            value: admin
+            
+        # resources:
+        #  limits:
+        #    cpu: 250m
+        #    memory: 100M
+        #  requests:
+        #    cpu: 200m
+
+      volumes:
+        - name: secretkeyvolume
+          secret:
+              secretName: mongo-replicaset-secretkey-secret
+              defaultMode: 0400
+
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-persistent-storage
+      spec:
+        storageClassName: azuredisk-csi-waitforfirstconsumer
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+  namespace: mongo
+  labels:
+    name: mongo-service
+    env: test
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector:
+    name: mongodb
+    env: test

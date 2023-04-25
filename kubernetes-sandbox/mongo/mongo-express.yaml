@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-express
+  namespace: mongo
+  labels:
+    app: mongo-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-express
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongo-express
+    spec:
+      containers:
+      - image: mongo-express
+        name: node
+        env:
+        - name: ME_CONFIG_MONGODB_URL
+          value: "mongodb://mongouser:mongouser@mongo-statefulset-0.mongo-service.mongo.svc.cluster.local,mongo-statefulset-1.mongo-service.mongo.svc.cluster.local,mongo-statefulset-2.mongo-service.mongo.svc.cluster.local?replicaSet=MainRepSet&authSource=admin"
+        ports:
+        - containerPort: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express-svc
+  namespace: mongo
+  labels:
+    app: mongo-express
+spec:
+  selector:
+    app: mongo-express
+  ports:
+  - port: 80
+    targetPort: 8081
+    protocol: TCP
