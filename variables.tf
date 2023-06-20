@@ -22,8 +22,8 @@ variable vm_type {
 variable kubeconfig_output_path {
 }
 
-variable "ingress_dns_label" {
+variable ingress_dns_label {
 }
 
-variable "ingress_replicas" {
+variable ingress_replicas {
 }

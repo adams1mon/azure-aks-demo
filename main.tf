@@ -50,7 +50,8 @@ provider "helm" {
 
 # create static public ip address to be used by the ingress
 resource "azurerm_public_ip" "ingress_ip" {
-  name                         = "nginx-ingress-public-ip"
+  # name                         = "nginx-ingress-public-ip"
+  name                         = "ingress-public-ip"
   location                     = azurerm_kubernetes_cluster.cluster.location
   resource_group_name          = azurerm_kubernetes_cluster.cluster.node_resource_group
   allocation_method            = "Static"
@@ -60,40 +61,40 @@ resource "azurerm_public_ip" "ingress_ip" {
 
 # add an ingress controller
 # install nginx ingress controller using helm chart
-resource "helm_release" "nginx_ingress" {
-  name       = "nginx-ingress"
-  repository = "https://helm.nginx.com/stable"
-  chart      = "nginx-ingress"
+# resource "helm_release" "nginx_ingress" {
+#   name       = "nginx-ingress"
+#   repository = "https://helm.nginx.com/stable"
+#   chart      = "nginx-ingress"
 
-  # says that endpoint is not configured
-  # name       = "ingress-nginx"
-  # repository = "https://kubernetes.github.io/ingress-nginx/"
-  # chart      = "ingress-nginx"
+#   # says that endpoint is not configured
+#   # name       = "ingress-nginx"
+#   # repository = "https://kubernetes.github.io/ingress-nginx/"
+#   # chart      = "ingress-nginx"
   
-  depends_on = [
-    azurerm_kubernetes_cluster.cluster
-  ]
+#   depends_on = [
+#     azurerm_kubernetes_cluster.cluster
+#   ]
 
-  set {
-    name  = "controller.replicaCount"
-    value = var.ingress_replicas
-  }
+#   set {
+#     name  = "controller.replicaCount"
+#     value = var.ingress_replicas
+#   }
 
-  set {
-    name  = "controller.service.loadBalancerIP"
-    value = azurerm_public_ip.ingress_ip.ip_address
-  }
+#   set {
+#     name  = "controller.service.loadBalancerIP"
+#     value = azurerm_public_ip.ingress_ip.ip_address
+#   }
 
-  # these don't work :(
-  # set {
-  #   name = "namespace"
-  #   value = "ingress-nginx"
-  # }
+#   # these don't work :(
+#   # set {
+#   #   name = "namespace"
+#   #   value = "ingress-nginx"
+#   # }
 
-  # set {
-  #   name = "create-namespace"
-  #   value = ""
-  # }
-}
+#   # set {
+#   #   name = "create-namespace"
+#   #   value = ""
+#   # }
+# }
 
 # TODO: create separate kubernetes namespace for the ingress controller pods
